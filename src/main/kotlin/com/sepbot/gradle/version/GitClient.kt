@@ -13,7 +13,8 @@ internal object GitClient {
   private val verified = AtomicBoolean(false)
 
   fun execute(cmd: String, vararg args: String): GitCommandResult {
-    return execute(rootDir(File(".")), cmd, *args)
+    val root = File(execute(File("."), "rev-parse", "--show-toplevel").output)
+    return execute(root, cmd, *args)
   }
 
   fun execute(working: File, cmd: String, vararg args: String): GitCommandResult {
@@ -31,15 +32,6 @@ internal object GitClient {
       it.joinToString(separator = System.lineSeparator()).trim()
     }
     return GitCommandResult(code, output)
-  }
-
-  private tailrec fun rootDir(parent: File): File {
-    val git = parent.resolve(".git")
-    return when {
-      git.isDirectory -> git
-      parent.parentFile.exists() -> GitClient.rootDir(parent.parentFile)
-      else -> throw GitClientException(".git directory not found")
-    }
   }
 
 }
